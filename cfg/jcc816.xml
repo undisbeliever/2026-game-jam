@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<header>
+	<releaseInfo devID="0"></releaseInfo>
+	<revision>0</revision>
+	<region>japan</region>
+	<cartConfig>
+		<mapMode fastROM="true" battery="false">loROM</mapMode>
+		<addonChip>none</addonChip>
+	</cartConfig>
+</header>
