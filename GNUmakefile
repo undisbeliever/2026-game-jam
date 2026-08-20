@@ -23,6 +23,7 @@ jcc816: directories out/jcc816/$(SFC_FILENAME)
 
 out/llvm-mos/$(SFC_FILENAME): $(SOURCES) $(HEADERS) $(LLVM_CA65_OBJ) cfg/llvm-mos-lorom.ld
 	mos-common-clang -mcpu=mosw65816 -g -Os -T cfg/llvm-mos-lorom.ld -flto -fnonreentrant -ffast-math -funroll-loops -finline-functions -fomit-frame-pointer -fno-stack-protector -fdata-sections -ffunction-sections -lexit-loop -o '$@' $(LLVM_CA65_OBJ) $(SOURCES)
+	python3 tools/write-sfc-checksum.py --lorom "$@"
 
 out/llvm-mos/%.o: src/llvm-mos/%.ca65.s
 	ca65 -o '$@' '$<'
@@ -30,10 +31,12 @@ out/llvm-mos/%.o: src/llvm-mos/%.ca65.s
 
 out/vbcc/$(SFC_FILENAME): $(VBCC_SOURCES) $(SOURCES) $(HEADERS)
 	vc +snes-hi -O4 -maxoptpasses=300 -inline-depth=1000 -unroll-all -force-statics -range-opt '--symfmt %06x\ %s' '--symfile $(patsubst %.sfc,%.sym,$@)' -o '$@' $(VBCC_SOURCES) $(SOURCES)
+	python3 tools/write-sfc-checksum.py --hirom "$@"
 
 
 out/jcc816/$(SFC_FILENAME): $(SOURCES) $(HEADERS) cfg/jcc816.xml
 	java -jar "$(JCC816_DIR)/JCC816.jar" -V1 -O2 -r=src -l='$@'=../cfg/jcc816.xml $(patsubst src/%,%,$(SOURCES))
+	python3 tools/write-sfc-checksum.py --lorom "$@"
 
 
 

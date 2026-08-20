@@ -6,9 +6,6 @@
 # A simple python script that calculates and writes the SNES header checksum
 # (and checksum complement) into the header of a homebrew SNES ROM.
 #
-# This script is intended to be used on homebrew SNES executables that were
-# created with my `snes_header.inc` include file.
-#
 # WARNING: This script will modify the input file.
 #
 #
@@ -41,37 +38,28 @@ import sys
 import argparse
 
 
-MIN_ROM_SIZE = 64 * 1024
 MAX_ROM_SIZE = 4 * 1024 * 1024
-
 
 
 def check_header_exists(rom_data, header_offset, expected_map_mode):
     """
-    Checks that `rom_data` contains an unaltered header that is created by `snes_header.inc`.
+    Checks that `rom_data` contains an ROM header with the correct memory map
+    and a dummy checksum.
 
     Returns true if header matches expected values
     """
 
-    # snes_header.inc creates a header with a blank maker code, blank game code and no expansion chips.
-    EXPECTED_START = (6 * b'\x20') + bytes(7)
-
-    EXPECTED_CHECKSUM = b'\xaa\xaa\x55\x55'
+    EXPECTED_CHECKSUMS = [b'\xaa\xaa\x55\x55', b'\x00\x00\x00\x00']
 
 
-    if rom_data[header_offset : header_offset + 13] != EXPECTED_START:
+    if rom_data[header_offset + 0x25] & 0xef | 0x20 != expected_map_mode:
         return False
 
-    if rom_data[header_offset + 0x25] & 0xef != expected_map_mode:
+    if rom_data[header_offset + 0x2a] not in [0, 0x33]:
         return False
 
-    if rom_data[header_offset + 0x2a] != 0x33:
+    if rom_data[header_offset + 0x2c : header_offset + 0x30] not in EXPECTED_CHECKSUMS:
         return False
-
-    # Do not write to files that have changed the checksum bytes (from what is defined in `snes_header`.inc`).
-    if rom_data[header_offset + 0x2c : header_offset + 0x30] != EXPECTED_CHECKSUM:
-        return False
-
 
     return True
 
@@ -89,12 +77,12 @@ def calculate_checksum(rom_data, bank_size, header_offset, expected_map_mode):
     rom_size = len(rom_data)
 
     # Confirm there is no copier header
-    if rom_size % bank_size != 0:
-        raise RuntimeError(f"sfc file is an invalid size (expected a multiple of { bank_size // 1024 } KiB).")
+    if rom_size % 32 * 1024 != 0:
+        raise RuntimeError(f"sfc file is an invalid size (expected a multiple of { 32 } KiB).")
 
 
-    if rom_size < MIN_ROM_SIZE:
-        raise RuntimeError(f"sfc file is too small (min { MIN_ROM_SIZE // 1024 } KiB).")
+    if rom_size < bank_size:
+        raise RuntimeError(f"sfc file is too small (min { bank_size // 1024 } KiB).")
 
     if rom_size > 4 * MAX_ROM_SIZE:
         raise RuntimeError(f"sfc file is too large (max { MAX_ROM_SIZE // 1024 } KiB).")
@@ -119,7 +107,7 @@ def calculate_checksum(rom_data, bank_size, header_offset, expected_map_mode):
 
         largest_power_of_two = 1 << (rom_size.bit_length() - 1)
 
-        if largest_power_of_two <= bank_size:
+        if largest_power_of_two < bank_size:
             # The "Remove old checksum" code below will only work correctly if the checksum is in the first part.
             raise RuntimeError("sfc file is too small.")
 
