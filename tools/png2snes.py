@@ -116,8 +116,6 @@ def parse_arguments():
                         help='tile format')
     parser.add_argument('-t', '--tileset-output', required=True,
                         help='tileset output file')
-    parser.add_argument('-p', '--palette-output', required=True,
-                        help='palette output file')
     parser.add_argument('-c', '--max-colors', required=False,
                         type=int, default=256,
                         help='maximum number of colors')
@@ -141,9 +139,6 @@ def main():
 
     with open(args.tileset_output, 'wb') as fp:
         fp.write(tileset)
-
-    with open(args.palette_output, 'wb') as fp:
-        fp.write(palette)
 
 
 if __name__ == '__main__':

@@ -51,8 +51,6 @@ def parse_arguments():
                         help='tileset output file')
     parser.add_argument('-m', '--tilemap-output', required=True,
                         help='tilemap output file')
-    parser.add_argument('-p', '--palette-output', required=True,
-                        help='palette output file')
     parser.add_argument('--high-priority', required=False, action='store_true',
                         help='increase tilemap priority')
     parser.add_argument('image_filename', action='store',
@@ -83,9 +81,6 @@ def main():
 
     with open(args.tilemap_output, 'wb') as fp:
         fp.write(tilemap_data)
-
-    with open(args.palette_output, 'wb') as fp:
-        fp.write(palette_data)
 
 
 
