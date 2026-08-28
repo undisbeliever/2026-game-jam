@@ -161,8 +161,7 @@ def create_palettes_map(image, bpp, pad_palette_data=None):
     # Returns palettes_map
 
     if image.mode != 'RGB':
-        image = image.convert('RGB')
-
+        raise ValueError("Palette image must use RGB color mode (no alpha channel)")
 
     colors_per_palette = 1 << bpp
     max_colors = min(colors_per_palette * 8, 256)
@@ -193,6 +192,9 @@ def create_palettes_map(image, bpp, pad_palette_data=None):
 
 
 def convert_palette_image(image):
+    if image.mode != 'RGB':
+        raise ValueError("Palette image must use RGB color mode (no alpha channel)")
+
     palette_data = bytearray()
 
     for c in image.getdata():
