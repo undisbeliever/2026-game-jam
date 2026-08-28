@@ -39,4 +39,3 @@ void wait_for_vblank(void);
 void reset_registers(void);
 
 #endif
-

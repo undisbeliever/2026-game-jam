@@ -44,32 +44,31 @@ const uint16_t COLOR_DATA[N_COLORS] = {
 };
 
 int main(void) {
-  reset_registers();
+    reset_registers();
 
-  enable_vblank_interrupts();
+    enable_vblank_interrupts();
 
-  uint8_t color = 0;
+    uint8_t color = 0;
 
-  while (1) {
-    if (color >= N_COLORS) {
-      color = 0;
+    while (1) {
+        if (color >= N_COLORS) {
+            color = 0;
+        }
+        wait_for_vblank();
+
+        PPU_CGADD = 0;
+        PPU_CGDATA = COLOR_DATA[color];
+        PPU_CGDATA = COLOR_DATA[color] >> 8;
+
+        // Enable the screen at full brightness
+        PPU_INIDISP = 15;
+
+        for (int i = 0; i < 59; i++) {
+            wait_for_vblank();
+        }
+
+        color++;
     }
-    wait_for_vblank();
 
-    PPU_CGADD = 0;
-    PPU_CGDATA = COLOR_DATA[color];
-    PPU_CGDATA = COLOR_DATA[color] >> 8;
-
-    // Enable the screen at full brightness
-    PPU_INIDISP = 15;
-
-    for (int i = 0; i < 59; i++) {
-      wait_for_vblank();
-    }
-
-    color++;
-  }
-
-  return 0;
+    return 0;
 }
-
