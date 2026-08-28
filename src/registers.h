@@ -247,7 +247,7 @@
 #define OBJSEL_NAME_WALIGN 4096
 #define OBJSEL_BASE_SHIFT 0
 #define OBJSEL_BASE_WALIGN 8192
-#define OBJSEL_(base, name, size) (((base) / 8192) | ((name) << 3) | OBJSEL_SIZE_##size)
+#define OBJSEL_(base, name, size) (((base) / 8192) | ((name) << 3) | (size))
 
 #define BGMODE_BG1_16PX 0x10
 #define BGMODE_BG2_16PX 0x20
@@ -266,11 +266,11 @@
 #define BGnSC_MAP_64X32 1
 #define BGnSC_MAP_32X64 2
 #define BGnSC_MAP_64X64 3
-#define BGnSC_(base, size) ((((base) / 1024) << 2) | BGnSC_MAP_##size)
+#define BGnSC_(base, size) ((((base) / 1024) << 2) | (size))
 
 #define BGnnNBA_SHFIT 4
 #define BGnnNBA_WALIGN 4096
-#define BGnnNBA_(base1, base2) ((base1) | (((base2) / 4096) << 4))
+#define BGnnNBA_(base1, base2) (((base1) / 4096) | (((base2) / 4096) << 4))
 
 #define VMAIN_INCREMENT_1 0x00
 #define VMAIN_INCREMENT_32 0x01
@@ -413,6 +413,6 @@
 #define DMAP_INDIRECT 0x40
 #define DMAP_B_TO_A 0x80
 
-#define DMAP_BBAD_(transfer, flags, reg) (DMAP_TRANSFER_##transfer | (flags) | (((reg) - 0x2100) << 8))
+#define DMAP_BBAD_(bbad, reg) ((bbad) | (((reg) - 0x2100) << 8))
 
 #endif
