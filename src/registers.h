@@ -249,6 +249,8 @@
 #define OBJSEL_BASE_WALIGN 8192
 #define OBJSEL_(base, name, size) (((base) / 8192) | ((name) << 3) | (size))
 
+#define BGMODE_M1_BG3P 0x09
+
 #define BGMODE_BG1_16PX 0x10
 #define BGMODE_BG2_16PX 0x20
 #define BGMODE_BG3_16PX 0x40

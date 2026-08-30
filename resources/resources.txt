@@ -1,0 +1,3 @@
+TitleScreenFg_tiles images/title-screen-fg.4bpp
+TitleScreenFg_map   images/title-screen-fg.map
+TitleScreen_palette palettes/title-screen.bin

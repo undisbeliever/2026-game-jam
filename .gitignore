@@ -1,3 +1,7 @@
 out/
 *.sfc
 
+src/gen-*
+src/gen-enums.h
+
+

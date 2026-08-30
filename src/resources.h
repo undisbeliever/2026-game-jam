@@ -1,5 +1,5 @@
-// main.c
-
+// Resources header
+//
 // SPDX-FileCopyrightText: © 2026 Marcus Rowe <undisbeliever@gmail.com>
 // SPDX-License-Identifier: Zlib
 //
@@ -25,34 +25,13 @@
 //         distribution.
 //
 
-#include "ppu.h"
-#include "registers.h"
-#include "resources.h"
+#ifndef H__RESOURCES_H_
+#define H__RESOURCES_H_
 
-#define VRAM_BG1_MAP 0x0000
-#define VRAM_BG1_TILES 0x1000
+#include "gen-enums.h"
+#include <stdint.h>
 
-int main(void) {
-    reset_registers();
+void dma_resource_to_cgram(uint8_t id, uint8_t cgramIndex);
+void dma_resource_to_vram(uint8_t id, uint16_t vramWordAddr);
 
-    PPU_BGMODE = BGMODE_M1_BG3P;
-
-    PPU_BG1SC = BGnSC_(VRAM_BG1_MAP, BGnSC_MAP_32X32);
-    PPU_BG12NBA = BGnnNBA_(VRAM_BG1_TILES, 0);
-
-    PPU_TM = T_BG1;
-
-    dma_resource_to_cgram(RES_TitleScreen_palette, 0);
-    dma_resource_to_vram(RES_TitleScreenFg_map, VRAM_BG1_MAP);
-    dma_resource_to_vram(RES_TitleScreenFg_tiles, VRAM_BG1_TILES);
-
-    enable_vblank_interrupts();
-
-    while (1) {
-        wait_for_vblank();
-
-        PPU_INIDISP = 15;
-    }
-
-    return 0;
-}
+#endif
