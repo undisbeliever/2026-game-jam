@@ -38,12 +38,20 @@ import re
 from typing import NamedTuple, TextIO, Final, Generator, Optional
 from dataclasses import dataclass
 
-ROM_HEADER_SIZE : Final = 0xFFD7
+
+MAX_ROM_SIZE: Final = 4 * 1024 * 1024
+
 
 class Lorom:
     BANK_SIZE: Final = 0x8000
     FIRST_BANK: Final = 0x80
     BANK_OFFSET: Final = 0x8000
+
+    HEADER_OFFSET: Final = 0x007FB0
+    ROM_HEADER_SIZE_OFFSET: Final = 0x007FD7
+    ROM_HEADER_CHECKSUM_OFFSET: Final = 0x007FDC
+
+    MAP_MODE: Final = 0x20
 
     @staticmethod
     def addr_to_rom_offset(addr: int) -> int:
@@ -60,6 +68,12 @@ class Hirom:
     FIRST_BANK: Final = 0xC0
     BANK_OFFSET: Final = 0
 
+    HEADER_OFFSET: Final = 0x00FFB0
+    ROM_HEADER_SIZE_OFFSET: Final = 0x00FFD7
+    ROM_HEADER_CHECKSUM_OFFSET: Final = 0x00FFDC
+
+    MAP_MODE: Final = 0x21
+
     @staticmethod
     def addr_to_rom_offset(addr: int) -> int:
         bank = addr >> 16
@@ -72,6 +86,107 @@ class Hirom:
             raise ValueError(f"addr is not a HIROM address: {addr:06x}")
 
         return addr & 0x3F_FFFF
+
+
+# SPDX-SnippetBegin
+# SDPX—SnippetName: snes-test-roms write-sfc-checksum.py
+# SPDX-FileCopyrightText: © 2022 Marcus Rowe <undisbeliever@gmail.com>
+# SPDX-License-Identifier: Zlib
+
+
+def check_header_exists(rom_data: bytes, memory_map: type[Lorom | Hirom]) -> bool:
+    """
+    Checks that `rom_data` contains an ROM header with the correct memory map
+    and a dummy checksum.
+
+    Returns true if header matches expected values
+    """
+
+    EXPECTED_CHECKSUMS = [b"\xaa\xaa\x55\x55", b"\x00\x00\x00\x00"]
+
+    header_offset = memory_map.HEADER_OFFSET
+
+    if rom_data[header_offset + 0x25] & 0xEF | 0x20 != memory_map.MAP_MODE:
+        return False
+
+    if rom_data[header_offset + 0x2A] not in [0, 0x33]:
+        return False
+
+    if rom_data[header_offset + 0x2C : header_offset + 0x30] not in EXPECTED_CHECKSUMS:
+        return False
+
+    return True
+
+
+def calculate_checksum(rom_data: bytes, memory_map: type[Lorom | Hirom]) -> bytes:
+    """
+    Calculate checksum.
+
+    Throws an exception if input is invalid.
+
+    Returns *bytes of length 4* containing checksum and checksum complement.
+    """
+
+    rom_size = len(rom_data)
+
+    if rom_size % memory_map.BANK_SIZE != 0:
+        raise RuntimeError(
+            f"ROM is not a multiple of {memory_map.BANK_SIZE // 1024} KiB."
+        )
+
+    # Confirm there is an SFC header in this file
+    if not check_header_exists(rom_data, memory_map):
+        raise RuntimeError(
+            "Could not find header.  Is the --hirom/--lorom argument correct?"
+        )
+
+    # Check if a cartridge can be created with 2 power-of-two ROM chips
+    if rom_size.bit_count() > 2:
+        raise RuntimeError("sfc file is an invalid size (cannot fit on 2 ROM chips)")
+
+    if rom_size.bit_count() == 1:
+        checksum = sum(rom_data)
+    else:
+        # If the sfc file is not a power of two, it is split in two.
+        # The first part contains the largest power-of-two bytes.
+        # The second part is repeated until the ROM size is a power-of-two.
+
+        largest_power_of_two = 1 << (rom_size.bit_length() - 1)
+
+        if largest_power_of_two < memory_map.BANK_SIZE:
+            # The "Remove old checksum" code below will only work correctly if the checksum is in the first part.
+            raise RuntimeError("sfc file is too small.")
+
+        first_part_checksum = sum(rom_data[0:largest_power_of_two])
+
+        remaining = rom_size - largest_power_of_two
+        assert remaining > 0
+        assert remaining.bit_count() == 1
+        assert largest_power_of_two % remaining == 0
+
+        remaining_checksum = sum(rom_data[largest_power_of_two:])
+        remaining_count = largest_power_of_two // remaining
+
+        checksum = first_part_checksum + remaining_checksum * remaining_count
+
+    # Remove old checksum and old complement from checksum
+    checksum -= rom_data[memory_map.HEADER_OFFSET + 0x2C]
+    checksum -= rom_data[memory_map.HEADER_OFFSET + 0x2D]
+    checksum -= rom_data[memory_map.HEADER_OFFSET + 0x2E]
+    checksum -= rom_data[memory_map.HEADER_OFFSET + 0x2F]
+    # Add expected `checksum + complement` value to checksum
+    checksum += 0xFF
+    checksum += 0xFF
+
+    checksum = checksum & 0xFFFF
+    complement = checksum ^ 0xFFFF
+
+    return complement.to_bytes(2, byteorder="little", signed=False) + checksum.to_bytes(
+        2, byteorder="little", signed=False
+    )
+
+
+# SPDX-SnippetEnd
 
 
 class Symbols(NamedTuple):
@@ -149,7 +264,9 @@ class PackedResources(NamedTuple):
 def pack_resources(
     resources: list[tuple[int, bytes]], mapping: type[Lorom | Hirom], rom_size: int
 ) -> PackedResources:
-    starting_bank: Final = (rom_size + mapping.BANK_SIZE - 1) // mapping.BANK_SIZE + mapping.FIRST_BANK
+    starting_bank: Final = (
+        rom_size + mapping.BANK_SIZE - 1
+    ) // mapping.BANK_SIZE + mapping.FIRST_BANK
     banks: list[ResourceBank] = []
     resource_table = [ResourceTableEntry(None, len(r)) for i, r in resources]
 
@@ -212,10 +329,12 @@ def build_rom(
     assert len(out) == rom_size
 
     # Update ROM size in the SFC header
-    rh_size_offset = mapping.addr_to_rom_offset(ROM_HEADER_SIZE)
-    out[rh_size_offset] = (rom_size + 1).bit_length() - 11
+    out[mapping.ROM_HEADER_SIZE_OFFSET] = (rom_size + 1).bit_length() - 11
 
-    # ::TODO write header checksum::
+    checksum = calculate_checksum(out, mapping)
+    out[mapping.ROM_HEADER_CHECKSUM_OFFSET : mapping.ROM_HEADER_CHECKSUM_OFFSET + 4] = (
+        checksum
+    )
 
     return out
 

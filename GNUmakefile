@@ -77,7 +77,6 @@ out/llvm-mos/$(SFC_BASENAME).rom out/$(SFC_BASENAME)-llvm-mos.sym &: $(SOURCES) 
 
 out/$(SFC_BASENAME)-llvm-mos.sfc: out/llvm-mos/$(SFC_BASENAME).rom out/$(SFC_BASENAME)-llvm-mos.sym $(ALL_RESOURCES) tools/insert-resources.py
 	python3 tools/insert-resources.py --lorom -o '$@' out/llvm-mos/$(SFC_BASENAME).rom out/$(SFC_BASENAME)-llvm-mos.sym resources/resources.txt out/resources
-	python3 tools/write-sfc-checksum.py --lorom '$@'
 
 
 
@@ -86,7 +85,6 @@ out/vbcc/$(SFC_BASENAME).rom out/$(SFC_BASENAME)-vbcc.sym &: $(VBCC_SOURCES) $(S
 
 out/$(SFC_BASENAME)-vbcc.sfc: out/vbcc/$(SFC_BASENAME).rom out/$(SFC_BASENAME)-vbcc.sym $(ALL_RESOURCES) tools/insert-resources.py
 	python3 tools/insert-resources.py --hirom -o '$@' out/vbcc/$(SFC_BASENAME).rom out/$(SFC_BASENAME)-vbcc.sym resources/resources.txt out/resources
-	python3 tools/write-sfc-checksum.py --hirom '$@'
 
 
 
@@ -97,7 +95,6 @@ out/jcc816/$(SFC_BASENAME).rom out/$(SFC_BASENAME)-jcc816.dbg &: $(SOURCES) $(HE
 
 out/$(SFC_BASENAME)-jcc816.sfc: out/jcc816/$(SFC_BASENAME).rom out/$(SFC_BASENAME)-jcc816.dbg $(ALL_RESOURCES) tools/insert-resources.py
 	python3 tools/insert-resources.py --lorom -o '$@' out/jcc816/$(SFC_BASENAME).rom out/$(SFC_BASENAME)-jcc816.dbg resources/resources.txt out/resources
-	python3 tools/write-sfc-checksum.py --lorom '$@'
 
 
 
