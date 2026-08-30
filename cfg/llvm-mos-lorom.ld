@@ -1,5 +1,5 @@
 /*
- * llvm-mos Super Nintendo 256KB FastROM LOROM memory map
+ * llvm-mos Super Nintendo 64KB FastROM LOROM memory map
  */
 
 PROVIDE(_fixed_size = 0x400);
@@ -24,14 +24,6 @@ MEMORY {
     /* Code + Data banks */
     bank80 (rx) : ORIGIN = 0x808000 + _fixed_size, LENGTH = 0x8000 - _fixed_size
     bank81 (rx) : ORIGIN = 0x818000 + _fixed_size, LENGTH = 0x8000 - _fixed_size
-    bank82 (rx) : ORIGIN = 0x828000 + _fixed_size, LENGTH = 0x8000 - _fixed_size
-    bank83 (rx) : ORIGIN = 0x838000 + _fixed_size, LENGTH = 0x8000 - _fixed_size
-
-    /* Data only banks */
-    bank84 (r)  : ORIGIN = 0x848000, LENGTH = 0x8000
-    bank85 (r)  : ORIGIN = 0x858000, LENGTH = 0x8000
-    bank86 (r)  : ORIGIN = 0x868000, LENGTH = 0x8000
-    bank87 (r)  : ORIGIN = 0x878000, LENGTH = 0x8000
 }
 
 REGION_ALIAS("c_readonly", bank80)
@@ -41,19 +33,12 @@ REGION_ALIAS("c_writeable", ram)
 SECTIONS {
   .rodata.bank80 : { *(.rodata.bank80 .rodata.bank80.*) } >.bank80
   .rodata.bank81 : { *(.rodata.bank81 .rodata.bank81.*) } >.bank81
-  .rodata.bank82 : { *(.rodata.bank82 .rodata.bank82.*) } >.bank82
-  .rodata.bank83 : { *(.rodata.bank83 .rodata.bank83.*) } >.bank83
-  .rodata.bank84 : { *(.rodata.bank84 .rodata.bank84.*) } >.bank84
-  .rodata.bank85 : { *(.rodata.bank85 .rodata.bank85.*) } >.bank85
-  .rodata.bank86 : { *(.rodata.bank86 .rodata.bank86.*) } >.bank86
-  .rodata.bank87 : { *(.rodata.bank87 .rodata.bank87.*) } >.bank87
 
   INCLUDE c.ld
 
   .text.bank80 : { *(.text.bank80 .text.bank80.*) } >.bank80
   .text.bank81 : { *(.text.bank81 .text.bank81.*) } >.bank81
-  .text.bank82 : { *(.text.bank82 .text.bank82.*) } >.bank82
-  .text.bank83 : { *(.text.bank83 .text.bank83.*) } >.bank83
+
 
   /* ::TODO Test:: */
   .bss : { *(.bss .bss.*) } > ram
@@ -73,7 +58,7 @@ SECTIONS {
 
     BYTE(0x30)      /* $ffd5 - map mode (LoROM FastROM) */
     BYTE(0)         /* $ffd6 - cartridge type (no SRAM) */
-    BYTE(8)         /* $ffd7 - ROM size */
+    BYTE(6)         /* $ffd7 - ROM size */
     BYTE(0)         /* $ffd8 - RAM size */
     BYTE(0)         /* $ffd9 - Destination code (Japan) */
     BYTE(0)         /* $ffda - developer ID (Unlicensed) */
@@ -96,13 +81,5 @@ OUTPUT_FORMAT {
     /* Code + Data banks */
     FULL(fixed)  FULL(bank80)
     FULL(fixed)  FULL(bank81)
-    FULL(fixed)  FULL(bank82)
-    FULL(fixed)  FULL(bank83)
-
-    /* Data only banks */
-    FULL(bank84)
-    FULL(bank85)
-    FULL(bank86)
-    FULL(bank87)
 }
 
