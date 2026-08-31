@@ -73,7 +73,7 @@ __regsused("a/x/r0/r1") char *populate_dma_regs(__reg("a") uint8_t) =
 
 #ifdef __mos__
 
-// ::TODO fix banking and move RESOURCES_TABLE to bank $81::
+__attribute__((section("bank81")))
 volatile const struct ResourceTableEntry RESOURCES_TABLE[N_RESOURCES] = {0};
 
 /**

@@ -39,6 +39,8 @@ SECTIONS {
   .text.bank80 : { *(.text.bank80 .text.bank80.*) } >.bank80
   .text.bank81 : { *(.text.bank81 .text.bank81.*) } >.bank81
 
+  bank80 : { *(bank80 bank80.*) } >bank80
+  bank81 : { *(bank81 bank81.*) } >bank81
 
   /* ::TODO Test:: */
   .bss : { *(.bss .bss.*) } > ram
