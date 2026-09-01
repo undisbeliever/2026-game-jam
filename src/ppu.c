@@ -91,7 +91,7 @@ void reset_registers(void) {
 
     // disable interrupts and HDMA before clearing registers
     MMIO_NMITIMEN = 0;
-    DMA_DMAEN = 0;
+    DMA_HDMAEN = 0;
 
     // enable Force Blank, full brightness
     PPU_INIDISP = INIDISP_FORCE_BLANK | INIDISP_BRIGHTNESS_MASK;
