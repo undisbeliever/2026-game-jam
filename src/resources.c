@@ -73,8 +73,7 @@ __regsused("a/x/r0/r1") char *populate_dma_regs(__reg("a") uint8_t) =
 
 #ifdef __mos__
 
-__attribute__((section("bank81")))
-volatile const struct ResourceTableEntry RESOURCES_TABLE[N_RESOURCES] = {0};
+__attribute__((section("bank81"))) volatile const struct ResourceTableEntry RESOURCES_TABLE[N_RESOURCES] = {0};
 
 /**
  * Load the DMA registers with the resource address and size.
@@ -87,6 +86,11 @@ inline static void populate_dma_regs(uint8_t id) {
     // ::HACK prevent llvm-mos from dropping RESOURCES_TABLE::
     // ::TODO figure out why I get an "undefined symbol: RESOURCES_TABLE" error when I remove this line::
     DMA_A1B0 = RESOURCES_TABLE[0].bank;
+
+    // Cannot mark "a" as clobbered in `__asm__`.
+    // Have to mark it as a dummy output instead.
+    // `volatile` in `__asm__` ensure the ASM is not dropped.
+    uint8_t dummy_a;
 
     // clang-format off
     __attribute__((leaf)) __asm__ volatile(
@@ -111,7 +115,7 @@ inline static void populate_dma_regs(uint8_t id) {
     // a8
     // i8
         // Output:
-        :
+        : "=a"(dummy_a)
         // Input:
         : "a"(id)
          // Clobbers
