@@ -43,8 +43,7 @@ int main(void) {
     PPU_TM = T_BG1;
 
     dma_resource_to_cgram(RES_TitleScreen_palette, 0);
-    dma_resource_to_vram(RES_TitleScreenFg_map, VRAM_BG1_MAP);
-    dma_resource_to_vram(RES_TitleScreenFg_tiles, VRAM_BG1_TILES);
+    dma_image_resource(RES_TitleScreenFg, VRAM_BG1_MAP, VRAM_BG1_TILES);
 
     enable_vblank_interrupts();
 

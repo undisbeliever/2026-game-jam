@@ -1,5 +1,5 @@
-// Resources header
-//
+// Memory attribute macros
+
 // SPDX-FileCopyrightText: © 2026 Marcus Rowe <undisbeliever@gmail.com>
 // SPDX-License-Identifier: Zlib
 //
@@ -25,14 +25,23 @@
 //         distribution.
 //
 
-#ifndef H__RESOURCES_H_
-#define H__RESOURCES_H_
+#ifdef __VBCC__
 
-#include "gen-enums.h"
-#include <stdint.h>
+// 16 bit pointer
+#define NEAR_PTR __near
 
-void dma_resource_to_cgram(uint8_t id, uint8_t cgramIndex);
-void dma_resource_to_vram(uint8_t id, uint16_t vramWordAddr);
-void dma_image_resource(uint8_t id, uint16_t mapWordAddr, uint16_t tilesWordAddr);
+#endif
+
+#ifdef __mos__
+
+// All pointers are 16 bit pointer
+#define NEAR_PTR
+
+#endif
+
+#ifdef __JCC__
+
+// I do not see a modifier to force 16-bit pointer
+#define NEAR_PTR
 
 #endif

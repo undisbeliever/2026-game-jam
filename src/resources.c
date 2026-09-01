@@ -26,6 +26,7 @@
 //
 
 #include "gen-enums.h"
+#include "memory.h"
 #include "registers.h"
 
 struct ResourceTableEntry {
@@ -145,6 +146,35 @@ static void dma_resource(uint8_t id, uint16_t dmapBbad) {
 }
 
 /**
+ * DMA a resource header to Work-RAM and prep a DMA to transfer the remaining data.
+ *
+ * After this function is called, the DMA registers will point to the data after
+ * the resource header.
+ *
+ * REQUIRES: Force-Blank, HDMA disabled
+ *
+ * @param id the resource id
+ * @param ptr Work-RAM header pointer (MUST be in bank $7e)
+ * @param size header size (SHOULD be smaller than resource data)
+ */
+static void dma_resource_header(uint8_t id, volatile NEAR_PTR void *ptr, uint16_t size) {
+    MMIO_WMADDML = (uint16_t)ptr;
+    MMIO_WMADDH = 0;
+
+    populate_dma_regs(id);
+    DMA_DMAP_BBAD_0 = DMAP_BBAD_(DMAP_TRANSFER_ONE, 0x2180); // WMDATA
+
+    uint16_t sizeAfterHeader = DMA_DAS0 - size;
+    if (sizeAfterHeader >= DMA_DAS0) {
+        sizeAfterHeader = 1;
+    }
+    DMA_DAS0 = size;
+    DMA_DMAEN = 1;
+
+    DMA_DAS0 = sizeAfterHeader;
+}
+
+/**
  * DMA a resource to CGRAM.
  *
  * REQUIRES: Force-Blank, HDMA disabled
@@ -166,4 +196,47 @@ void dma_resource_to_vram(uint8_t id, uint16_t vramWordAddr) {
     PPU_VMADD = vramWordAddr;
 
     dma_resource(id, DMAP_BBAD_(DMAP_TRANSFER_TWO, 0x2118));
+}
+
+/**
+ * Image resource header.
+ *
+ * After the header is:
+ *  * tilemap data (tilemapSize * 256 bytes)
+ *  * tile data
+ */
+struct ImageHeader {
+    uint8_t tilemapSize;
+};
+#define IMAGE_HEADER_SIZE 1
+
+/**
+ * DMA an image resource to VRAM.
+ *
+ * REQUIRES: Force-Blank, HDMA disabled
+ *
+ * @param id resource id
+ * @param mapWordAddr VRAM tilemap word address
+ * @param tilesWordAddr VRAM tile word address
+ */
+void dma_image_resource(uint8_t id, uint16_t mapWordAddr, uint16_t tilesWordAddr) {
+    struct ImageHeader header;
+    dma_resource_header(id, &header, IMAGE_HEADER_SIZE);
+
+    DMA_DMAP_BBAD_0 = DMAP_BBAD_(DMAP_TRANSFER_TWO, 0x2118); // VMDATA
+
+    PPU_VMAIN = VMAIN_INCREMENT_1 | VMAIN_INCREMENT_H;
+    PPU_VMADD = mapWordAddr;
+
+    // DAS0 = resource size after header
+    const uint16_t tileSize = DMA_DAS0 - (header.tilemapSize * 256);
+
+    // DMA map data
+    DMA_DAS0 = header.tilemapSize * 256;
+    DMA_DMAEN = 1;
+
+    // DMA tile data
+    PPU_VMADD = tilesWordAddr;
+    DMA_DAS0 = tileSize;
+    DMA_DMAEN = 1;
 }

@@ -29,8 +29,8 @@ all: resources llvm-mos vbcc jcc816
 ALL_RESOURCES :=
 
 define IMAGE_template =
-  ALL_RESOURCES += out/resources/images/$(1) out/resources/images/$(basename $(1)).map out/resources/palettes/$(2).bin
-  out/resources/images/$(1): IMG_PALETTE_SRC=resources/palettes/$(2).png
+  ALL_RESOURCES += out/resources/images/$(1)-image out/resources/palettes/$(2).bin
+  out/resources/images/$(1)-image: IMG_PALETTE_SRC=resources/palettes/$(2).png
 endef
 $(foreach i,$(IMAGES), $(eval $(call IMAGE_template,$(firstword $(subst :, ,$i)),$(lastword $(subst :, ,$i)))))
 
@@ -39,14 +39,14 @@ ALL_RESOURCES += $(patsubst %,out/resources/palettes/%.bin,$(PALETTES))
 
 resources: directories $(ALL_RESOURCES)
 
-out/resources/images/%.2bpp out/resources/images/%.map &: resources/images/%.png $(IMG_PALETTE_SRC) tools/image2snes.py tools/_snes.py
-	python3 tools/image2snes.py -f 2bpp --tileset-output out/resources/images/$*.4bpp --tilemap-output out/resources/images/$*.map resources/images/$*.png $(IMG_PALETTE_SRC)
+out/resources/images/%.2bpp-image: resources/images/%.png $(IMG_PALETTE_SRC) tools/image2snes.py tools/_snes.py
+	python3 tools/image2snes.py -f 2bpp -o '$@' resources/images/$*.png $(IMG_PALETTE_SRC)
 
-out/resources/images/%.4bpp out/resources/images/%.map &: resources/images/%.png $(IMG_PALETTE_SRC) tools/image2snes.py tools/_snes.py
-	python3 tools/image2snes.py -f 4bpp --tileset-output out/resources/images/$*.4bpp --tilemap-output out/resources/images/$*.map resources/images/$*.png $(IMG_PALETTE_SRC)
+out/resources/images/%.4bpp-image: resources/images/%.png $(IMG_PALETTE_SRC) tools/image2snes.py tools/_snes.py
+	python3 tools/image2snes.py -f 4bpp -o '$@' resources/images/$*.png $(IMG_PALETTE_SRC)
 
-out/resources/images/%.8bpp out/resources/images/%.map &: resources/images/%.png $(IMG_PALETTE_SRC) tools/image2snes.py tools/_snes.py
-	python3 tools/image2snes.py -f 8bpp --tileset-output out/resources/images/$*.4bpp --tilemap-output out/resources/images/$*.map resources/images/$*.png $(IMG_PALETTE_SRC)
+out/resources/images/%.8bpp-image: resources/images/%.png $(IMG_PALETTE_SRC) tools/image2snes.py tools/_snes.py
+	python3 tools/image2snes.py -f 8bpp -o '$@' resources/images/$*.png $(IMG_PALETTE_SRC)
 
 
 out/resources/palettes/%.bin: resources/palettes/%.png tools/png2palette.py tools/_snes.py

@@ -47,10 +47,8 @@ def parse_arguments():
     parser.add_argument('-f', '--format', required=True,
                         choices=FORMATS_BPP.keys(),
                         help='tile format')
-    parser.add_argument('-t', '--tileset-output', required=True,
-                        help='tileset output file')
-    parser.add_argument('-m', '--tilemap-output', required=True,
-                        help='tilemap output file')
+    parser.add_argument('-o', '--output', required=True,
+                        help='output file')
     parser.add_argument('--high-priority', required=False, action='store_true',
                         help='increase tilemap priority')
     parser.add_argument('image_filename', action='store',
@@ -76,11 +74,13 @@ def main():
 
     tilemap_data = create_tilemap_data(tilemap, args.high_priority)
 
-    with open(args.tileset_output, 'wb') as fp:
-        fp.write(tileset_data)
+    assert len(tilemap_data) % 256 == 0
+    header = bytes((len(tilemap_data) // 256,))
 
-    with open(args.tilemap_output, 'wb') as fp:
+    with open(args.output, 'wb') as fp:
+        fp.write(header)
         fp.write(tilemap_data)
+        fp.write(tileset_data)
 
 
 
