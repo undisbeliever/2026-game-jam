@@ -14,7 +14,7 @@ __STACK_BOTTOM = 0x01ff;
 
 MEMORY {
     zp : ORIGIN = __rc31 + 1, LENGTH = 0x100 - (__rc31 + 1)
-    ram (rw) : ORIGIN = 0x200, LENGTH = 0xfe00
+    ram (rw) : ORIGIN = 0x200, LENGTH = 0x1e00
     wram7e (rw) : ORIGIN = 0x7e2000, LENGTH = 0xe000
     wram7f (rw) : ORIGIN = 0x7f0000, LENGTH = 0x10000
 
@@ -42,10 +42,9 @@ SECTIONS {
   bank80 : { *(bank80 bank80.*) } >bank80
   bank81 : { *(bank81 bank81.*) } >bank81
 
-  /* ::TODO Test:: */
   .bss : { *(.bss .bss.*) } > ram
-  .wram7e : { *(.bss.wram7e .bss.wram7e.*) } > wram7e
-  .wram7f : { *(.bss.wram7e .bss.wram7e.*) } > wram7f
+  .wram7e : { *(wram7e wram7e.* .bss.wram7e.*) } > wram7e
+  .wram7f : { *(wram7f wram7f.* .bss.wram7f.*) } > wram7f
 
 
   .text.interrpts : { *(.text.interrupts) } > bank80
