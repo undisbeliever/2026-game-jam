@@ -61,7 +61,7 @@ inline static void wait_for_interrupt(void) { __asm("wai"); }
  */
 void enable_vblank_interrupts(void) {
     MMIO_RDNMI;
-    MMIO_NMITIMEN = NMITIMEN_VBLANK;
+    MMIO_NMITIMEN = NMITIMEN_VBLANK | NMITIMEN_AUTO_READ;
     nmi_counter = 0;
 }
 

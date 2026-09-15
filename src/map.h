@@ -1,5 +1,5 @@
-// PPU function header
-//
+// Map subsystem
+
 // SPDX-FileCopyrightText: © 2026 Marcus Rowe <undisbeliever@gmail.com>
 // SPDX-License-Identifier: Zlib
 //
@@ -25,33 +25,46 @@
 //         distribution.
 //
 
-#ifndef H__PPU_H_
-#define H__PPU_H_
+#ifndef H__MAP_H_
+#define H__MAP_H_
 
 #include <stdint.h>
 
-#define NAMETABLE_WIDTH 32
+/** VRAM word address of the map tilemap */
+#define VRAM_MAP_TILEMAP_WADDR 0x0000
 
-#define SCREEN_WIDTH 256
-#define SCREEN_HEIGHT 224
-
-extern uint16_t n_lag_frames;
-extern uint32_t frame_counter;
+/** The top-left position of the map */
+#define MAP_ORIGIN 0x4000
 
 /**
- * A shadow variable for a PPU double-write register.
+ * Map Tile resource header.
+ *
+ * After the header is:
+ *  * tile data
  */
-union DoubleWriteShadow {
-    uint16_t value;
-    struct {
-        uint8_t l;
-        uint8_t h;
-    } bytes;
+struct MapTilesHeader {
+    uint8_t tileset_l[256];
+    uint8_t tileset_h[256];
 };
+#define MAP_TILES_HEADER_SIZE 512
 
-void enable_vblank_interrupts(void);
-void wait_for_vblank(void);
+extern struct MapTilesHeader mapTiles;
 
-void reset_registers(void);
+struct MapDataHeader {
+    uint8_t height;
+};
+#define MAP_DATA_HEADER_SIZE 0
+
+// ::TODO increase to 8192 and make private::
+#define MAX_MAP_DATA_SIZE 4096
+
+extern struct MapDataHeader mapHeader;
+
+extern uint16_t camera_x;
+extern uint16_t camera_y;
+
+void draw_map__forceblank(void);
+void process_map_scrolling(void);
+void update_map__vblank(void);
 
 #endif

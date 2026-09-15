@@ -52,6 +52,33 @@ def convert_snes_tileset(tiles, bpp):
     return out
 
 
+def convert_large_snes_tileset(tiles, bpp):
+    """
+    Converts large 16px tiles to SNES encoded data
+    """
+    reordered_tiles = list()
+
+    n_tiles = len(tiles)
+
+    for s_row in range(0, n_tiles + 7, 8):
+        row_tiles = [
+            split_large_tile(t) for t in tiles[s_row : min(s_row + 8, n_tiles)]
+        ]
+
+        for t in row_tiles:
+            reordered_tiles.append(t[0])
+            reordered_tiles.append(t[1])
+
+        if len(row_tiles) != 8:
+            for i in range(len(row_tiles), 8):
+                reordered_tiles.append(bytes(64))
+
+        for t in row_tiles:
+            reordered_tiles.append(t[2])
+            reordered_tiles.append(t[3])
+
+    return convert_snes_tileset(reordered_tiles, bpp)
+
 
 def convert_rgb_color(c):
     r, g, b = c
@@ -290,6 +317,55 @@ def convert_tilemap_and_tileset(tiles, palettes_map):
     return tilemap, tileset
 
 
+def convert_large_tilemap_and_tileset(tiles, palettes_map):
+    # Returns a tuple(tilemap, tileset)
+
+    invalid_tiles = list()
+
+    tilemap = list()
+    tileset = list()
+
+    tileset_map = dict()
+
+    for tile_index, tile in enumerate(tiles):
+        palette_id, pal_map = get_palette_id(tile, palettes_map)
+
+        if pal_map:
+            # Must be bytes() here as a dict() key must be immutable
+            tile_data = bytes([pal_map[c] for c in tile])
+
+            tile_match = tileset_map.get(tile_data, None)
+            if tile_match is None:
+                tile_id = 2 * (len(tileset) & 7) + 0x20 * (len(tileset) >> 3)
+                tile_match = tile_id, False, False
+
+                tileset.append(tile_data)
+
+                h_tile_data = hflip_large_tile(tile_data)
+                v_tile_data = vflip_large_tile(tile_data)
+                hv_tile_data = vflip_large_tile(h_tile_data)
+
+                tileset_map[tile_data] = tile_match
+                tileset_map.setdefault(h_tile_data, (tile_id, True, False))
+                tileset_map.setdefault(v_tile_data, (tile_id, False, True))
+                tileset_map.setdefault(hv_tile_data, (tile_id, True, True))
+
+            tilemap.append(
+                TileMapEntry(
+                    tile_id=tile_match[0],
+                    palette_id=palette_id,
+                    hflip=tile_match[1],
+                    vflip=tile_match[2],
+                )
+            )
+        else:
+            invalid_tiles.append(tile_index)
+
+    if invalid_tiles:
+        raise ValueError(f"Cannot find palette for tiles {invalid_tiles}")
+
+    return tilemap, tileset
+
 
 def create_tilemap_data(tilemap, default_order):
     data = bytearray()
@@ -308,8 +384,6 @@ def create_tilemap_data(tilemap, default_order):
 def create_tilemap_data_low(tilemap):
     data = bytearray()
 
-    assert(len(tilemap) % 32 * 32 == 0)
-
     for t in tilemap:
         data.append(t.tile_id & 0xff)
 
@@ -319,8 +393,6 @@ def create_tilemap_data_low(tilemap):
 
 def create_tilemap_data_high(tilemap, default_order):
     data = bytearray()
-
-    assert(len(tilemap) % 32 * 32 == 0)
 
     for t in tilemap:
         data.append(((t.tile_id & 0x3ff) >> 8) | ((t.palette_id & 7) << 2)

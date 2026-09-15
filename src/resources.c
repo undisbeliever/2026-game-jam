@@ -26,6 +26,7 @@
 //
 
 #include "gen-enums.h"
+#include "map.h"
 #include "memory.h"
 #include "registers.h"
 
@@ -238,5 +239,23 @@ void dma_image_resource(uint8_t id, uint16_t mapWordAddr, uint16_t tilesWordAddr
     // DMA tile data
     PPU_VMADD = tilesWordAddr;
     DMA_DAS0 = tileSize;
+    DMA_DMAEN = 1;
+}
+
+/**
+ * DMA an map tiles resource to Work-RAM and VRAM.
+ *
+ * REQUIRES: Force-Blank, HDMA disabled
+ *
+ * @param id resource id
+ * @param tilesWordAddr VRAM tile word address
+ */
+void dma_map_tiles_resource(uint8_t id, uint16_t vramWordAddr) {
+    dma_resource_header(id, &mapTiles, MAP_TILES_HEADER_SIZE);
+
+    PPU_VMAIN = VMAIN_INCREMENT_1 | VMAIN_INCREMENT_H;
+    PPU_VMADD = vramWordAddr;
+
+    DMA_DMAP_BBAD_0 = DMAP_BBAD_(DMAP_TRANSFER_TWO, 0x2118); // VMDATA
     DMA_DMAEN = 1;
 }

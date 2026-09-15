@@ -1,2 +1,4 @@
 TitleScreenFg images/title-screen-fg.4bpp-image
 TitleScreen_palette palettes/title-screen.bin
+Tower_palette palettes/tower.bin
+Tower_tiles map-tiles/tower.bin

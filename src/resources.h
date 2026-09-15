@@ -34,5 +34,6 @@
 void dma_resource_to_cgram(uint8_t id, uint8_t cgramIndex);
 void dma_resource_to_vram(uint8_t id, uint16_t vramWordAddr);
 void dma_image_resource(uint8_t id, uint16_t mapWordAddr, uint16_t tilesWordAddr);
+void dma_map_tiles_resource(uint8_t id, uint16_t vramWordAddr);
 
 #endif

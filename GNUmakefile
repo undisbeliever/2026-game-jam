@@ -5,9 +5,13 @@
 SFC_BASENAME  := game
 
 
-# Format: <name>.<format>:<palette>
+# Format: <basename>.<format>:<palette>
 IMAGES := \
   title-screen-fg.4bpp:title-screen
+
+# Format: <basename>:<palette>
+MAP_TILES := \
+  tower:tower
 
 PALETTES :=
 
@@ -34,6 +38,12 @@ define IMAGE_template =
 endef
 $(foreach i,$(IMAGES), $(eval $(call IMAGE_template,$(firstword $(subst :, ,$i)),$(lastword $(subst :, ,$i)))))
 
+define MAP_TILES_template =
+  ALL_RESOURCES += build/resources/map-tiles/$(1).bin build/resources/palettes/$(2).bin
+  build/resources/map-tiles/$(1).bin: IMG_PALETTE_SRC=resources/palettes/$(2).png
+endef
+$(foreach i,$(MAP_TILES), $(eval $(call MAP_TILES_template,$(firstword $(subst :, ,$i)),$(lastword $(subst :, ,$i)))))
+
 ALL_RESOURCES += $(patsubst %,build/resources/palettes/%.bin,$(PALETTES))
 
 
@@ -47,6 +57,10 @@ build/resources/images/%.4bpp-image: resources/images/%.png $(IMG_PALETTE_SRC) t
 
 build/resources/images/%.8bpp-image: resources/images/%.png $(IMG_PALETTE_SRC) tools/image2snes.py tools/_snes.py
 	python3 tools/image2snes.py -f 8bpp -o '$@' resources/images/$*.png $(IMG_PALETTE_SRC)
+
+
+build/resources/map-tiles/%.bin: resources/map-tiles/%.png $(IMG_PALETTE_SRC) tools/map-tiles-compiler.py tools/_snes.py
+	python3 tools/map-tiles-compiler.py -o '$@' resources/map-tiles/$*.png $(IMG_PALETTE_SRC)
 
 
 build/resources/palettes/%.bin: resources/palettes/%.png tools/png2palette.py tools/_snes.py
@@ -98,7 +112,7 @@ build/$(SFC_BASENAME)-jcc816.sfc: build/jcc816/$(SFC_BASENAME).rom build/$(SFC_B
 
 
 
-DIRECTORIES := build/jcc816/ build/llvm-mos/ build/vbcc/ build/resources/ build/resources/images/ build/resources/palettes/
+DIRECTORIES := build/jcc816/ build/llvm-mos/ build/vbcc/ build/resources/ build/resources/images/ build/resources/palettes/ build/resources/map-tiles/
 directories: $(DIRECTORIES)
 
 $(DIRECTORIES):
