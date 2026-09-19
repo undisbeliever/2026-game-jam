@@ -15,6 +15,7 @@ MAP_TILES := \
 
 PALETTES :=
 
+MAPS := $(wildcard resources/maps/*.tmx)
 
 SOURCES := $(wildcard src/*.c)
 HEADERS := $(wildcard src/*.h) src/gen-enums.h
@@ -45,7 +46,7 @@ endef
 $(foreach i,$(MAP_TILES), $(eval $(call MAP_TILES_template,$(firstword $(subst :, ,$i)),$(lastword $(subst :, ,$i)))))
 
 ALL_RESOURCES += $(patsubst %,build/resources/palettes/%.bin,$(PALETTES))
-
+ALL_RESOURCES += $(patsubst resources/maps/%.tmx,build/resources/maps/%.bin,$(MAPS))
 
 resources: directories $(ALL_RESOURCES)
 
@@ -62,6 +63,8 @@ build/resources/images/%.8bpp-image: resources/images/%.png $(IMG_PALETTE_SRC) t
 build/resources/map-tiles/%.bin: resources/map-tiles/%.png $(IMG_PALETTE_SRC) tools/map-tiles-compiler.py tools/_snes.py
 	python3 tools/map-tiles-compiler.py -o '$@' resources/map-tiles/$*.png $(IMG_PALETTE_SRC)
 
+build/resources/maps/%.bin: resources/maps/%.tmx resources/resources.txt tools/map-compiler.py tools/_file_parsers.py
+	python3 tools/map-compiler.py -o '$@' resources/maps/$*.tmx resources/resources.txt
 
 build/resources/palettes/%.bin: resources/palettes/%.png tools/png2palette.py tools/_snes.py
 	python3 tools/png2palette.py -o build/resources/palettes/$*.bin resources/palettes/$*.png
@@ -112,7 +115,7 @@ build/$(SFC_BASENAME)-jcc816.sfc: build/jcc816/$(SFC_BASENAME).rom build/$(SFC_B
 
 
 
-DIRECTORIES := build/jcc816/ build/llvm-mos/ build/vbcc/ build/resources/ build/resources/images/ build/resources/palettes/ build/resources/map-tiles/
+DIRECTORIES := build/jcc816/ build/llvm-mos/ build/vbcc/ build/resources/ build/resources/images/ build/resources/palettes/ build/resources/maps/ build/resources/map-tiles/
 directories: $(DIRECTORIES)
 
 $(DIRECTORIES):

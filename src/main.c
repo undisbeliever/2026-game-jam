@@ -45,23 +45,14 @@ int main(void) {
 
     PPU_TM = T_BG1;
 
-    dma_resource_to_cgram(RES_Tower_palette, 0);
-    dma_map_tiles_resource(RES_Tower_tiles, VRAM_BG1_TILES);
+    dma_map_resource(RES_Map01);
 
     camera_x = MAP_ORIGIN;
     camera_y = MAP_ORIGIN;
 
-    // ::TODO load map data from a resource::
-    mapHeader.height = 128;
-    for (unsigned i = 0; i < MAX_MAP_DATA_SIZE; i++) {
-        mapData[i] = 0;
-    }
-    for (unsigned y = 0; y < 128; y++) {
-        uint16_t x = (y / 2) & 31;
-        mapData[y * 32 + x] = 0x13;
-        mapData[y * 32 + 31 - x] = 0x13;
-        mapData[y * 32 + 31] = mapData[y * 32] = 0x04 | ((y & 1) * 16);
-    }
+    dma_resource_to_cgram(mapHeader.paletteResource, 0);
+    dma_map_tiles_resource(mapHeader.tilesResource, VRAM_BG1_TILES);
+
     draw_map__forceblank();
 
     enable_vblank_interrupts();

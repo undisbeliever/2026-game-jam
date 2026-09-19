@@ -51,9 +51,11 @@ struct MapTilesHeader {
 extern struct MapTilesHeader mapTiles;
 
 struct MapDataHeader {
+    uint8_t tilesResource;
+    uint8_t paletteResource;
     uint8_t height;
 };
-#define MAP_DATA_HEADER_SIZE 0
+#define MAP_DATA_HEADER_SIZE 3
 
 // ::TODO increase to 8192 and make private::
 #define MAX_MAP_DATA_SIZE 4096

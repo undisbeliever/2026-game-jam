@@ -259,3 +259,26 @@ void dma_map_tiles_resource(uint8_t id, uint16_t vramWordAddr) {
     DMA_DMAP_BBAD_0 = DMAP_BBAD_(DMAP_TRANSFER_TWO, 0x2118); // VMDATA
     DMA_DMAEN = 1;
 }
+
+extern uint8_t mapData[MAX_MAP_DATA_SIZE];
+
+/**
+ * DMA an map tiles resource to Work-RAM and VRAM.
+ *
+ * REQUIRES: Force-Blank, HDMA disabled
+ *
+ * @param id resource id
+ * @param tilesWordAddr VRAM tile word address
+ */
+void dma_map_resource(uint8_t id) {
+    dma_resource_header(id, &mapHeader, MAP_DATA_HEADER_SIZE);
+
+    MMIO_WMADDML = (uint16_t)(NEAR_PTR void*)(&mapData);
+    MMIO_WMADDH = 0;
+
+    DMA_DMAP_BBAD_0 = DMAP_BBAD_(DMAP_TRANSFER_ONE, 0x2180); // WMDATA
+    if (DMA_DAS0 >= MAX_MAP_DATA_SIZE) {
+        DMA_DAS0 = MAX_MAP_DATA_SIZE;
+    }
+    DMA_DMAEN = 1;
+}

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.11.0" orientation="orthogonal" renderorder="right-down" width="32" height="96" tilewidth="16" tileheight="16" infinite="0" nextlayerid="3" nextobjectid="1">
+ <properties>
+  <property name="palette" value="Tower_palette"/>
+  <property name="tiles" value="Tower_tiles"/>
+ </properties>
+ <tileset firstgid="1" source="../map-tiles/tower.tsx"/>
+ <layer id="1" name="Tile Layer 1" width="32" height="96">
+  <data encoding="base64" compression="gzip">
+   H4sIAAAAAAAAA+3PsQ0AIAwDwUDYf2YomQAL6QrL5eu6quZZhz7Z7nD79o/Hu/0r0F/8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pwf+1OfbPPn/RudLc1OADAAAA==
+  </data>
+ </layer>
+</map>
