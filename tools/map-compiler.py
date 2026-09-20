@@ -36,6 +36,9 @@ import struct
 import xml.etree.ElementTree
 from typing import NamedTuple, TextIO, Final, Generator
 
+FIXED_AXIS_TILES: Final = 32
+MAX_DATA_SIZE: Final = 4096
+
 
 class MultiError(Exception):
     def __init__(self, message: str, errors: list[str]):
@@ -164,12 +167,14 @@ def read_tmx_map_file(filename: str) -> MapFile:
         invalid_tiles = list()
 
         for i, t in enumerate(layer_data):
-            if t >= 0x100_0000:
-                flipped_tiles.append(f"({i % map_width}, {i / map_width})")
-            t = t - firstgid
-            if t < 0 or t > 255:
-                invalid_tiles.append(f"({i % map_width}, {i / map_width})")
-            map_data.append(t)
+            if t < 0x100_0000:
+                t = t - firstgid
+                if t >= 0 and t <= 255:
+                    map_data.append(t)
+                else:
+                    invalid_tiles.append(f"({i % map_width}, {i // map_width})")
+            else:
+                flipped_tiles.append(f"({i % map_width}, {i // map_width})")
 
         if flipped_tiles:
             errors.append(
@@ -201,17 +206,28 @@ def find_resource_id(
     return 0
 
 
+def row_to_column_major_order(data: bytes, width: int) -> bytes:
+    return bytes(data[i] for x in range(width) for i in range(x, len(data), width))
+
+
 def compile_map(map_file: MapFile, resources: Resources) -> bytes:
     errors = list[str]()
 
-    MAX_DATA_SIZE: Final = 4096
-    MAX_HEIGHT: Final = MAX_DATA_SIZE / 32
+    if map_file.width == FIXED_AXIS_TILES:
+        orientation = 0
+        dynamic_axis_length = map_file.height
+        map_data = map_file.map_data
+    elif map_file.height == FIXED_AXIS_TILES:
+        orientation = 1
+        dynamic_axis_length = map_file.width
+        map_data = row_to_column_major_order(map_file.map_data, map_file.width)
+    else:
+        errors.append(f"Map must be {FIXED_AXIS_TILES} tiles in height OR width")
 
-    if map_file.width != 32:
-        errors.append("Map must be 32 tiles wide")
-
-    if map_file.height < 16 or map_file.height > MAX_HEIGHT:
-        errors.append(f"Invalid map height: must be between 16 - {MAX_HEIGHT}")
+    if len(map_file.map_data) > MAX_DATA_SIZE:
+        errors.append(
+            f"Map is too large: ({len(map_file.map_data)} bytes, max: {MAX_DATA_SIZE})"
+        )
 
     map_tiles = find_resource_id(map_file, "tiles", resources, errors)
     palette = find_resource_id(map_file, "palette", resources, errors)
@@ -224,10 +240,11 @@ def compile_map(map_file: MapFile, resources: Resources) -> bytes:
             [
                 map_tiles,
                 palette,
-                map_file.height,
+                orientation,
+                dynamic_axis_length,
             ]
         )
-        + map_file.map_data
+        + map_data
     )
 
 

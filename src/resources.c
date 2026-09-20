@@ -273,7 +273,7 @@ extern uint8_t mapData[MAX_MAP_DATA_SIZE];
 void dma_map_resource(uint8_t id) {
     dma_resource_header(id, &mapHeader, MAP_DATA_HEADER_SIZE);
 
-    MMIO_WMADDML = (uint16_t)(NEAR_PTR void*)(&mapData);
+    MMIO_WMADDML = (uint16_t)(NEAR_PTR void *)(&mapData);
     MMIO_WMADDH = 0;
 
     DMA_DMAP_BBAD_0 = DMAP_BBAD_(DMAP_TRANSFER_ONE, 0x2180); // WMDATA

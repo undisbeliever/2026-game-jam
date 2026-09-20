@@ -32,10 +32,7 @@
 
 #define VRAM_BG1_TILES 0x1000
 
-// ::TODO remove::
-extern uint8_t mapData[MAX_MAP_DATA_SIZE];
-
-int main(void) {
+static void load_map(uint8_t mapResource) {
     reset_registers();
 
     PPU_BGMODE = BGMODE_M1_BG3P | BGMODE_BG1_16PX;
@@ -45,7 +42,7 @@ int main(void) {
 
     PPU_TM = T_BG1;
 
-    dma_map_resource(RES_Map01);
+    dma_map_resource(mapResource);
 
     camera_x = MAP_ORIGIN;
     camera_y = MAP_ORIGIN;
@@ -56,6 +53,11 @@ int main(void) {
     draw_map__forceblank();
 
     enable_vblank_interrupts();
+}
+
+int main(void) {
+    uint8_t map = RES_Map02;
+    load_map(map);
 
     while (1) {
         wait_for_vblank();
@@ -70,6 +72,22 @@ int main(void) {
             draw_map__forceblank();
         } else {
             PPU_INIDISP = 15;
+        }
+
+        if (MMIO_JOY1H & JOYPAD_H_SELECT) {
+            if (map == RES_Map01) {
+                map = RES_Map02;
+                load_map(map);
+            } else {
+                map = RES_Map01;
+                load_map(map);
+            }
+            // Wait until select released
+            do {
+                wait_for_vblank();
+                while (MMIO_HVBJOY & HVBJOY_AUTO_READ) {
+                }
+            } while (MMIO_JOY1H & JOYPAD_H_SELECT);
         }
 
         uint16_t camera_speed = 3;
