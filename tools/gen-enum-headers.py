@@ -39,7 +39,7 @@ def generate_header(resources: Resources) -> str:
 
 """)
 
-        out.write(f"#define N_RESOURCES {len(resources)}\n")
+        out.write(f"#define N_RESOURCES {len(resources.resources)}\n")
         out.write("\n")
 
         for i, r in enumerate(resources.resources):
