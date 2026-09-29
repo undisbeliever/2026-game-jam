@@ -207,6 +207,15 @@
 #define DMA_DAS6 (*(volatile uint16_t *)0x4365)
 #define DMA_DAS7 (*(volatile uint16_t *)0x4375)
 
+#define DMA_DAS0L (*(volatile uint8_t *)0x4305)
+#define DMA_DAS1L (*(volatile uint8_t *)0x4315)
+#define DMA_DAS2L (*(volatile uint8_t *)0x4325)
+#define DMA_DAS3L (*(volatile uint8_t *)0x4335)
+#define DMA_DAS4L (*(volatile uint8_t *)0x4345)
+#define DMA_DAS5L (*(volatile uint8_t *)0x4355)
+#define DMA_DAS6L (*(volatile uint8_t *)0x4365)
+#define DMA_DAS7L (*(volatile uint8_t *)0x4375)
+
 #define DMA_DASB0 (*(volatile uint8_t *)0x4307)
 #define DMA_DASB1 (*(volatile uint8_t *)0x4317)
 #define DMA_DASB2 (*(volatile uint8_t *)0x4327)

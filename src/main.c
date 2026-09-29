@@ -26,21 +26,25 @@
 //
 
 #include "map.h"
+#include "metasprites.h"
 #include "ppu.h"
 #include "registers.h"
 #include "resources.h"
 
 #define VRAM_BG1_TILES 0x1000
+#define VRAM_SPRITE_TILES 0x6000
 
 static void load_map(uint8_t mapResource) {
     reset_registers();
 
     PPU_BGMODE = BGMODE_M1_BG3P | BGMODE_BG1_16PX;
 
+    PPU_OBJSEL = OBJSEL_(VRAM_SPRITE_TILES, 0, OBJSEL_SIZE_8_16);
+
     PPU_BG1SC = BGnSC_(VRAM_MAP_TILEMAP_WADDR, BGnSC_MAP_32X32);
     PPU_BG12NBA = BGnnNBA_(VRAM_BG1_TILES, 0);
 
-    PPU_TM = T_BG1;
+    PPU_TM = T_BG1 | T_OBJ;
 
     dma_map_resource(mapResource);
 
@@ -50,7 +54,11 @@ static void load_map(uint8_t mapResource) {
     dma_resource_to_cgram(mapHeader.paletteResource, 0);
     dma_map_tiles_resource(mapHeader.tilesResource, VRAM_BG1_TILES);
 
+    dma_resource_to_vram(RES_Metasprite_tiles, VRAM_SPRITE_TILES);
+    dma_resource_to_cgram(RES_Metasprite_palettes, 128);
+
     draw_map__forceblank();
+    start_metasprites();
 
     enable_vblank_interrupts();
 }
@@ -61,6 +69,7 @@ int main(void) {
 
     while (1) {
         wait_for_vblank();
+        dma_oambuffer__vblank();
         update_map__vblank();
 
         while (MMIO_HVBJOY & HVBJOY_AUTO_READ) {
@@ -108,6 +117,19 @@ int main(void) {
             camera_x += camera_speed;
         }
         process_map_scrolling();
+
+        start_metasprites();
+
+        draw_metasprite_screen(0, 1 + (frame_counter >> 3) & 3, (frame_counter & 511) - 128, 160);
+
+        draw_metasprite_screen(0, 0, 110, 112);
+        if (MMIO_JOY1L & JOYPAD_L_L) {
+            draw_metasprite_screen(0, 6, 64, 80);
+        }
+        if (MMIO_JOY1L & JOYPAD_L_R) {
+            draw_metasprite_screen(0, 2, 192, 80);
+        }
+        finalize_metasprites();
     }
 
     return 0;

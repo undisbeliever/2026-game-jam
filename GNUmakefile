@@ -13,7 +13,7 @@ IMAGES := \
 MAP_TILES := \
   tower:tower
 
-PALETTES :=
+PALETTES := sprites
 
 MAPS := $(wildcard resources/maps/*.tmx)
 
@@ -24,6 +24,8 @@ LLVM_CA65_OBJ := $(patsubst src/llvm-mos/%.ca65.s,build/llvm-mos/%.o, $(wildcard
 
 VBCC_SOURCES := $(wildcard src/vbcc/*.s src/vbcc/*.c)
 
+JCC816_SOURCES := $(wildcard src/jcc816/*.asm src/jcc816/*.c)
+
 
 .PHONY: all directories resources jcc816 llvm-mos vbcc
 
@@ -31,7 +33,7 @@ VBCC_SOURCES := $(wildcard src/vbcc/*.s src/vbcc/*.c)
 all: resources llvm-mos vbcc jcc816
 
 
-ALL_RESOURCES :=
+ALL_RESOURCES := build/resources/metasprites.bin build/resources/sprite-tiles.4bpp
 
 define IMAGE_template =
   ALL_RESOURCES += build/resources/images/$(1)-image build/resources/palettes/$(2).bin
@@ -49,6 +51,12 @@ ALL_RESOURCES += $(patsubst %,build/resources/palettes/%.bin,$(PALETTES))
 ALL_RESOURCES += $(patsubst resources/maps/%.tmx,build/resources/maps/%.bin,$(MAPS))
 
 resources: directories $(ALL_RESOURCES)
+
+build/resources/metasprites.bin: resources/metasprites tools/ms-compiler.py
+	python3 tools/ms-compiler.py -o '$@' resources/metasprites
+
+build/resources/sprite-tiles.4bpp: resources/sprite-tiles.png tools/png2snes.py tools/_snes.py
+	python3 tools/png2snes.py -f 4bpp -t '$@' resources/sprite-tiles.png
 
 build/resources/images/%.2bpp-image: resources/images/%.png $(IMG_PALETTE_SRC) tools/image2snes.py tools/_snes.py
 	python3 tools/image2snes.py -f 2bpp -o '$@' resources/images/$*.png $(IMG_PALETTE_SRC)
@@ -93,7 +101,7 @@ build/llvm-mos/$(SFC_BASENAME).rom build/$(SFC_BASENAME)-llvm-mos.sym &: $(SOURC
 	nm $@.elf | awk '$$2 != "t" { print $$1, $$3 }' >| build/$(SFC_BASENAME)-llvm-mos.sym
 
 build/$(SFC_BASENAME)-llvm-mos.sfc: build/llvm-mos/$(SFC_BASENAME).rom build/$(SFC_BASENAME)-llvm-mos.sym $(ALL_RESOURCES) tools/insert-resources.py
-	python3 tools/insert-resources.py --lorom -o '$@' build/llvm-mos/$(SFC_BASENAME).rom build/$(SFC_BASENAME)-llvm-mos.sym resources/resources.txt build/resources
+	python3 tools/insert-resources.py --lorom -o '$@' build/llvm-mos/$(SFC_BASENAME).rom build/$(SFC_BASENAME)-llvm-mos.sym build/resources/metasprites.bin resources/resources.txt build/resources
 
 
 
@@ -101,17 +109,17 @@ build/vbcc/$(SFC_BASENAME).rom build/$(SFC_BASENAME)-vbcc.sym &: $(VBCC_SOURCES)
 	vc +snes-hi -O4 -maxoptpasses=300 -inline-depth=1000 -unroll-all -force-statics -range-opt '--symfmt %06x\ %s' '--symfile build/$(SFC_BASENAME)-vbcc.sym' -o '$@' $(VBCC_SOURCES) $(SOURCES)
 
 build/$(SFC_BASENAME)-vbcc.sfc: build/vbcc/$(SFC_BASENAME).rom build/$(SFC_BASENAME)-vbcc.sym $(ALL_RESOURCES) tools/insert-resources.py
-	python3 tools/insert-resources.py --hirom -o '$@' build/vbcc/$(SFC_BASENAME).rom build/$(SFC_BASENAME)-vbcc.sym resources/resources.txt build/resources
+	python3 tools/insert-resources.py --hirom -o '$@' build/vbcc/$(SFC_BASENAME).rom build/$(SFC_BASENAME)-vbcc.sym build/resources/metasprites.bin resources/resources.txt build/resources
 
 
 
-build/jcc816/$(SFC_BASENAME).rom build/$(SFC_BASENAME)-jcc816.dbg &: $(SOURCES) $(HEADERS) cfg/jcc816.xml
-	java -jar "$(JCC816_DIR)/JCC816.jar" -V1 -O2 -D2 -r=src -l='build/jcc816/$(SFC_BASENAME)'=../cfg/jcc816.xml $(patsubst src/%,%,$(SOURCES))
+build/jcc816/$(SFC_BASENAME).rom build/$(SFC_BASENAME)-jcc816.dbg &: $(SOURCES) $(JCC816_SOURCES) $(HEADERS) cfg/jcc816.xml
+	java -jar "$(JCC816_DIR)/JCC816.jar" -V1 -O2 -D2 -r=src -l='build/jcc816/$(SFC_BASENAME)'=../cfg/jcc816.xml $(patsubst src/%,%,$(SOURCES) $(JCC816_SOURCES))
 	mv build/jcc816/$(SFC_BASENAME).sfc build/jcc816/$(SFC_BASENAME).rom
 	mv build/jcc816/$(SFC_BASENAME).dbg build/$(SFC_BASENAME)-jcc816.dbg
 
 build/$(SFC_BASENAME)-jcc816.sfc: build/jcc816/$(SFC_BASENAME).rom build/$(SFC_BASENAME)-jcc816.dbg $(ALL_RESOURCES) tools/insert-resources.py
-	python3 tools/insert-resources.py --lorom -o '$@' build/jcc816/$(SFC_BASENAME).rom build/$(SFC_BASENAME)-jcc816.dbg resources/resources.txt build/resources
+	python3 tools/insert-resources.py --lorom -o '$@' build/jcc816/$(SFC_BASENAME).rom build/$(SFC_BASENAME)-jcc816.dbg build/resources/metasprites.bin resources/resources.txt build/resources
 
 
 

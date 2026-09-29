@@ -2,5 +2,7 @@ TitleScreenFg images/title-screen-fg.4bpp-image
 TitleScreen_palette palettes/title-screen.bin
 Tower_palette palettes/tower.bin
 Tower_tiles map-tiles/tower.bin
+Metasprite_tiles sprite-tiles.4bpp
+Metasprite_palettes palettes/sprites.bin
 Map01 maps/map01.bin
 Map02 maps/map02.bin

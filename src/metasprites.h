@@ -1,4 +1,4 @@
-// Memory attribute macros
+// Metasprite drawing functions
 
 // SPDX-FileCopyrightText: © 2026 Marcus Rowe <undisbeliever@gmail.com>
 // SPDX-License-Identifier: Zlib
@@ -25,37 +25,27 @@
 //         distribution.
 //
 
-#ifndef H__MEMORY_H_
-#define H__MEMORY_H_
+#ifndef H__METASPRITES_H_
+#define H__METASPRITES_H_
 
-#ifdef __VBCC__
+#include <stdint.h>
 
-// 16 bit pointer
-#define NEAR_PTR __near
+#ifndef __JCC__
+void start_metasprites(void);
+void finalize_metasprites(void);
 
-#define ZEROPAGE __zpage
-#define WRAM7E
+void dma_oambuffer__vblank(void);
 
-#endif
+void draw_metasprite_screen(uint8_t frameset, uint8_t frame, int16_t x, int16_t y);
 
-#ifdef __mos__
+#else
 
-// All pointers are 16 bit pointer
-#define NEAR_PTR
+void start_metasprites(void);
+[[A16, XY16]] extern void finalize_metasprites(void);
 
-#define ZEROPAGE __attribute__((section("zeropage")))
-#define WRAM7E __attribute__((section("wram7e")))
+void dma_oambuffer__vblank(void);
 
-#endif
-
-#ifdef __JCC__
-
-// I do not see a modifier to force 16-bit pointer
-#define NEAR_PTR
-
-#define ZEROPAGE
-
-#define WRAM7E
+void draw_metasprite_screen(uint8_t frameset, uint8_t frame, int16_t x, int16_t y);
 
 #endif
 

@@ -1,0 +1,54 @@
+
+[player]
+;------
+tile_offset = 0
+palette = 0
+order = 2
+
+## FaceRight
+l  -8 -16 $00
+l  -8   0 $20
+
+## WalkRight1
+l  -6 -16 $02
+l  -6   0 $22
+
+## WalkRight2
+clone FaceRight
+
+## WalkRight3
+l  -8 -16 $04
+l  -8   0 $24
+
+## WalkRight4
+clone FaceRight
+
+## JumpRight
+l -10 -17 $06
+l -10  -1 $26
+
+## FallRight
+l  -9 -17 $08
+l  -9  -1 $28
+
+## FaceLeft
+clone FaceRight hflip
+
+## WalkLeft1
+clone WalkRight1 hflip
+
+## WalkLeft2
+clone WalkRight2 hflip
+
+## WalkLeft3
+clone WalkRight3 hflip
+
+## WalkLeft4
+clone WalkRight4 hflip
+
+## JumpLeft
+clone JumpRight hflip
+
+## FallLeft
+clone FallRight hflip
+

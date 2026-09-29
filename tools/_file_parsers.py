@@ -24,6 +24,7 @@
 #    3. This notice may not be removed or altered from any source distribution.
 
 import re
+from collections import OrderedDict
 from typing import NamedTuple, TextIO, Final, Generator
 
 
@@ -43,9 +44,11 @@ def is_name_valid(name: str) -> bool:
     return NAME_REGEX.match(name) is not None
 
 
-def line_reader(fp: TextIO) -> Generator[tuple[int, str], None, None]:
+def line_reader(
+    fp: TextIO, comment_char: str
+) -> Generator[tuple[int, str], None, None]:
     for line_no, line in enumerate(fp, 1):
-        line, _, comment = line.partition("#")
+        line, _, comment = line.partition(comment_char)
         line = line.strip()
         if line:
             yield line_no, line
@@ -57,7 +60,7 @@ def read_resources_txt(filename: str) -> Resources:
     with open(filename, "r") as fp:
         resources = list()
 
-        for line_no, line in line_reader(fp):
+        for line_no, line in line_reader(fp, "#"):
             s = line.split()
             if len(s) == 2:
                 r_name, r_filename = s

@@ -41,6 +41,8 @@ from dataclasses import dataclass
 
 MAX_ROM_SIZE: Final = 4 * 1024 * 1024
 
+MAX_MS_DATA_SIZE: Final = 8192
+
 
 class Lorom:
     BANK_SIZE: Final = 0x8000
@@ -191,6 +193,7 @@ def calculate_checksum(rom_data: bytes, memory_map: type[Lorom | Hirom]) -> byte
 
 class Symbols(NamedTuple):
     resources_table: int
+    metasprite_rom_data: int
 
 
 def read_symbol_file_lines(sym_filename: str) -> Generator[tuple[str, str], None, None]:
@@ -215,11 +218,15 @@ def read_symbol_file(sym_filename: str) -> Symbols:
     for name, addr_str in read_symbol_file_lines(sym_filename):
         if name == "RESOURCES_TABLE" or name == "_RESOURCES_TABLE":
             resources_table = int(addr_str, 16)
+        if name == "METASPRITE_ROM_DATA" or name == "_METASPRITE_ROM_DATA":
+            metasprite_rom_data = int(addr_str, 16)
 
     if resources_table is None:
         raise RuntimeError("RESOURCES_TABLE not found in symbol file")
 
-    return Symbols(resources_table=resources_table)
+    return Symbols(
+        resources_table=resources_table, metasprite_rom_data=metasprite_rom_data
+    )
 
 
 def read_bin_limit(filename: str, limit: int) -> bytes:
@@ -287,7 +294,10 @@ def pack_resources(
 
 
 def build_rom(
-    base_rom: bytes, resources: PackedResources, symbols: Symbols
+    base_rom: bytes,
+    metasprite_data: bytes,
+    resources: PackedResources,
+    symbols: Symbols,
 ) -> bytearray:
     mapping = resources.mapping
     bank_size = resources.mapping.BANK_SIZE
@@ -300,6 +310,18 @@ def build_rom(
     assert len(out) == rom_size
 
     out[0 : len(base_rom)] = base_rom
+
+    ms_offset: Final = mapping.addr_to_rom_offset(symbols.metasprite_rom_data)
+    if any(v != 0 for v in out[ms_offset:ms_offset + MAX_MS_DATA_SIZE]):
+        raise RuntimeError("METASPRITE_ROM_DATA is not empty or is the wrong size")
+
+    if len(metasprite_data) > MAX_MS_DATA_SIZE:
+        raise RuntimeError(
+            f"metasprite data is too large ({len(metasprite_data)} bytes, max: {MAX_MS_DATA_SIZE})"
+        )
+
+    assert len(metasprite_data) < MAX_MS_DATA_SIZE
+    out[ms_offset : ms_offset + len(metasprite_data)] = metasprite_data
 
     rt_offset = mapping.addr_to_rom_offset(symbols.resources_table)
     rt_end: Final = rt_offset + len(resources.resource_table) * 5
@@ -357,6 +379,9 @@ def parse_arguments():
     )
     parser.add_argument("sym_filename", action="store", help="Symbol file")
     parser.add_argument(
+        "metasprite_data", action="store", help="compiled metasprite data"
+    )
+    parser.add_argument(
         "resources_filename", action="store", help="resources list file"
     )
     parser.add_argument("out_dir", action="store", help="output resources directory")
@@ -377,6 +402,7 @@ def main() -> None:
     else:
         raise RuntimeError("Unknown mapping type")
 
+    metasprite_data = read_bin_limit(args.metasprite_data, MAX_MS_DATA_SIZE)
     resource_list = read_resources_txt(args.resources_filename)
     resources = read_resource_files(resource_list, mapping, args.out_dir)
 
@@ -385,7 +411,7 @@ def main() -> None:
 
     packed_resources = pack_resources(resources, mapping, len(base_rom))
 
-    out = build_rom(base_rom, packed_resources, symbols)
+    out = build_rom(base_rom, metasprite_data, packed_resources, symbols)
 
     with open(args.output, "wb") as fp:
         fp.write(out)
