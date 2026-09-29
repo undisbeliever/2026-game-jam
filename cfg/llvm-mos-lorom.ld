@@ -43,6 +43,7 @@ SECTIONS {
   bank81 : { *(bank81 bank81.*) } >bank81
 
   .bss : { *(.bss .bss.*) } > ram
+  .zeropage : { *(zeropage zeropage.* .bss.zeropage.*) } > zp
   .wram7e : { *(wram7e wram7e.* .bss.wram7e.*) } > wram7e
   .wram7f : { *(wram7f wram7f.* .bss.wram7f.*) } > wram7f
 
