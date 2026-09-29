@@ -38,10 +38,9 @@ uint32_t frame_counter;
 
 #ifdef __JCC__
 // NMI (Non-Maskable Interrupt)
-[[interrupt_NMI, no_ISR1]] void NmiISR(void) { nmi_counter++; }
+[[interrupt_NMI, no_ISR1]] extern void NmiIsr(void);
 
-// ::TODO inline assembly::
-inline static void wait_for_interrupt(void) {}
+inline static void wait_for_interrupt(void) { asm("wai"); }
 #endif
 
 #ifdef __VBCC__

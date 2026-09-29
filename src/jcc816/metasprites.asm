@@ -1,4 +1,4 @@
-; Metasprite drawing functions for llvm-mos
+; Metasprite drawing functions for jcc816
 ;
 ; SPDX-FileCopyrightText: © 2026 Marcus Rowe <undisbeliever@gmail.com>
 ; SPDX-License-Identifier: Zlib
