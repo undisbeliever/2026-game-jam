@@ -184,7 +184,7 @@ def extract_tilemap_tiles(image):
 
 
 
-def create_palettes_map(image, bpp, pad_palette_data=None):
+def create_palettes_map(image, bpp):
     # Returns palettes_map
 
     if image.mode != 'RGB':

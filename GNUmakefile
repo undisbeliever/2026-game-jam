@@ -55,8 +55,9 @@ resources: directories $(ALL_RESOURCES)
 build/resources/metasprites.bin: resources/metasprites tools/ms-compiler.py
 	python3 tools/ms-compiler.py -o '$@' resources/metasprites
 
-build/resources/sprite-tiles.4bpp: resources/sprite-tiles.png tools/png2snes.py tools/_snes.py
-	python3 tools/png2snes.py -f 4bpp -t '$@' resources/sprite-tiles.png
+build/resources/sprite-tiles.4bpp: resources/sprite-tiles.png resources/palettes/sprites.png tools/convert-tiles-with-palette.py tools/_snes.py
+	python3 tools/convert-tiles-with-palette.py -f 4bpp -o '$@' resources/sprite-tiles.png resources/palettes/sprites.png
+
 
 build/resources/images/%.2bpp-image: resources/images/%.png $(IMG_PALETTE_SRC) tools/image2snes.py tools/_snes.py
 	python3 tools/image2snes.py -f 2bpp -o '$@' resources/images/$*.png $(IMG_PALETTE_SRC)
