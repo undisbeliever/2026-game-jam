@@ -28,6 +28,7 @@
 #include "map.h"
 #include "metasprites.h"
 #include "ppu.h"
+#include "input.h"
 #include "registers.h"
 #include "resources.h"
 
@@ -71,11 +72,9 @@ int main(void) {
         wait_for_vblank();
         dma_oambuffer__vblank();
         update_map__vblank();
+        read_inputs__vblank();
 
-        while (MMIO_HVBJOY & HVBJOY_AUTO_READ) {
-        }
-
-        if (MMIO_JOY1H & JOYPAD_H_START) {
+        if (joypad_pressed & JOYPAD_START) {
             // Redraw map
             PPU_INIDISP = INIDISP_FORCE_BLANK | INIDISP_BRIGHTNESS_MASK;
             draw_map__forceblank();
@@ -83,7 +82,7 @@ int main(void) {
             PPU_INIDISP = 15;
         }
 
-        if (MMIO_JOY1H & JOYPAD_H_SELECT) {
+        if (joypad_pressed & JOYPAD_SELECT) {
             if (map == RES_Map01) {
                 map = RES_Map02;
                 load_map(map);
@@ -91,29 +90,23 @@ int main(void) {
                 map = RES_Map01;
                 load_map(map);
             }
-            // Wait until select released
-            do {
-                wait_for_vblank();
-                while (MMIO_HVBJOY & HVBJOY_AUTO_READ) {
-                }
-            } while (MMIO_JOY1H & JOYPAD_H_SELECT);
         }
 
         uint16_t camera_speed = 3;
-        if (MMIO_JOY1H & JOYPAD_H_Y) {
+        if (joypad_current & JOYPAD_Y) {
             camera_speed = 300;
         }
 
-        if (MMIO_JOY1H & JOYPAD_H_UP) {
+        if (joypad_current & JOYPAD_UP) {
             camera_y -= camera_speed;
         }
-        if (MMIO_JOY1H & JOYPAD_H_DOWN) {
+        if (joypad_current & JOYPAD_DOWN) {
             camera_y += camera_speed;
         }
-        if (MMIO_JOY1H & JOYPAD_H_LEFT) {
+        if (joypad_current & JOYPAD_LEFT) {
             camera_x -= camera_speed;
         }
-        if (MMIO_JOY1H & JOYPAD_H_RIGHT) {
+        if (joypad_current & JOYPAD_RIGHT) {
             camera_x += camera_speed;
         }
         process_map_scrolling();
@@ -123,10 +116,10 @@ int main(void) {
         draw_metasprite_screen(0, 1 + (frame_counter >> 3) & 3, (frame_counter & 511) - 128, 160);
 
         draw_metasprite_screen(0, 0, 110, 112);
-        if (MMIO_JOY1L & JOYPAD_L_L) {
+        if (joypad_current & JOYPAD_L) {
             draw_metasprite_screen(0, 6, 64, 80);
         }
-        if (MMIO_JOY1L & JOYPAD_L_R) {
+        if (joypad_current & JOYPAD_R) {
             draw_metasprite_screen(0, 2, 192, 80);
         }
         finalize_metasprites();
