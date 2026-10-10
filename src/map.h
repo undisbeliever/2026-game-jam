@@ -69,6 +69,9 @@ extern struct MapDataHeader mapHeader;
 extern uint16_t camera_x;
 extern uint16_t camera_y;
 
+extern uint16_t map_maxXPos;
+extern uint16_t map_maxYPos;
+
 void draw_map__forceblank(void);
 void process_map_scrolling(void);
 void update_map__vblank(void);

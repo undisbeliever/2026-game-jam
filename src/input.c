@@ -45,14 +45,14 @@ uint16_t joypad_pressed;
  * SHOULD BE called at the end of the VBlank routine.
  */
 void read_inputs__vblank() {
-    while (MMIO_HVBJOY & HVBJOY_AUTO_READ) { }
+    while (MMIO_HVBJOY & HVBJOY_AUTO_READ) {
+    }
 
     uint16_t joy;
 
     if ((MMIO_JOY1L & JOYPAD_L_TYPE_MASK) == 0) {
         joy = MMIO_JOY1;
-    }
-    else {
+    } else {
         joy = 0;
     }
 

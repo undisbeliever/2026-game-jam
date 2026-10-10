@@ -25,10 +25,11 @@
 //         distribution.
 //
 
+#include "input.h"
 #include "map.h"
 #include "metasprites.h"
+#include "player.h"
 #include "ppu.h"
-#include "input.h"
 #include "registers.h"
 #include "resources.h"
 
@@ -61,6 +62,8 @@ static void load_map(uint8_t mapResource) {
     draw_map__forceblank();
     start_metasprites();
 
+    player_init();
+
     enable_vblank_interrupts();
 }
 
@@ -73,6 +76,8 @@ int main(void) {
         dma_oambuffer__vblank();
         update_map__vblank();
         read_inputs__vblank();
+
+        start_metasprites();
 
         if (joypad_pressed & JOYPAD_START) {
             // Redraw map
@@ -92,36 +97,19 @@ int main(void) {
             }
         }
 
-        uint16_t camera_speed = 3;
-        if (joypad_current & JOYPAD_Y) {
-            camera_speed = 300;
-        }
+        player_process();
 
-        if (joypad_current & JOYPAD_UP) {
-            camera_y -= camera_speed;
-        }
-        if (joypad_current & JOYPAD_DOWN) {
-            camera_y += camera_speed;
-        }
-        if (joypad_current & JOYPAD_LEFT) {
-            camera_x -= camera_speed;
-        }
-        if (joypad_current & JOYPAD_RIGHT) {
-            camera_x += camera_speed;
-        }
-        process_map_scrolling();
-
-        start_metasprites();
-
-        draw_metasprite_screen(0, 1 + (frame_counter >> 3) & 3, (frame_counter & 511) - 128, 160);
-
-        draw_metasprite_screen(0, 0, 110, 112);
         if (joypad_current & JOYPAD_L) {
-            draw_metasprite_screen(0, 6, 64, 80);
+            camera_x -= 2;
         }
         if (joypad_current & JOYPAD_R) {
-            draw_metasprite_screen(0, 2, 192, 80);
+            camera_x += 3;
         }
+        process_map_scrolling();
+        set_metasprite_camera(camera_x, camera_y);
+
+        draw_player();
+
         finalize_metasprites();
     }
 

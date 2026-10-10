@@ -117,6 +117,9 @@ void start_metasprites(void) {
 
 const volatile uint8_t FixedOffscreenByte = -16;
 
+static uint16_t ms_cameraXOffset;
+static uint16_t ms_cameraYOffset;
+
 /**
  * Transfer the OAM buffer to OAM.
  *
@@ -167,4 +170,19 @@ void dma_oambuffer__vblank(void) {
  */
 void draw_metasprite_screen(uint8_t frameset, uint8_t frame, int16_t x, int16_t y) {
     draw_metasprite_biased(frameset, frame, x - MS_BIAS_X, y - MS_BIAS_Y);
+}
+
+/**
+ * Sets the metasprite camera position.
+ */
+void set_metasprite_camera(uint16_t x, uint16_t y) {
+    ms_cameraXOffset = x + MS_BIAS_X;
+    ms_cameraYOffset = y + MS_BIAS_Y;
+}
+
+/**
+ * Draw metasprite at the given camera coordinates.
+ */
+void draw_metasprite_camera(uint8_t frameset, uint8_t frame, int16_t x, int16_t y) {
+    draw_metasprite_biased(frameset, frame, x - ms_cameraXOffset, y - ms_cameraYOffset);
 }

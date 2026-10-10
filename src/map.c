@@ -85,6 +85,9 @@ static uint16_t map_maxCameraX;
 /** Maximum `camera_y` value */
 static uint16_t map_maxCameraY;
 
+uint16_t map_maxXPos;
+uint16_t map_maxYPos;
+
 /**
  * The map X/Y coordinate (depending on orientation) of the top-left most visible tile.
  *
@@ -169,10 +172,16 @@ static inline void draw_map__forceblank__horizontal(void) {
  */
 void draw_map__forceblank(void) {
     if (!mapHeader.orientation) {
+        map_maxXPos = MAP_ORIGIN + FIXED_AXIS_PX;
         map_maxCameraX = MAP_ORIGIN + FIXED_AXIS_PX - SCREEN_WIDTH;
-        map_maxCameraY = mapHeader.dynamicAxisLength * MAP_TILE_PX + (MAP_ORIGIN - SCREEN_HEIGHT);
+
+        map_maxYPos = mapHeader.dynamicAxisLength * MAP_TILE_PX + MAP_ORIGIN;
+        map_maxCameraY = map_maxYPos - SCREEN_HEIGHT;
     } else {
-        map_maxCameraX = mapHeader.dynamicAxisLength * MAP_TILE_PX + (MAP_ORIGIN - SCREEN_WIDTH);
+        map_maxXPos = mapHeader.dynamicAxisLength * MAP_TILE_PX + (MAP_ORIGIN - SCREEN_WIDTH);
+        map_maxCameraX = map_maxXPos - SCREEN_WIDTH;
+
+        map_maxYPos = MAP_ORIGIN + FIXED_AXIS_PX;
         map_maxCameraY = MAP_ORIGIN + FIXED_AXIS_PX - SCREEN_HEIGHT;
     }
 

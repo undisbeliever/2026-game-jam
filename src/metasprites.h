@@ -31,22 +31,22 @@
 #include <stdint.h>
 
 #ifndef __JCC__
+
 void start_metasprites(void);
 void finalize_metasprites(void);
-
-void dma_oambuffer__vblank(void);
-
-void draw_metasprite_screen(uint8_t frameset, uint8_t frame, int16_t x, int16_t y);
 
 #else
 
 void start_metasprites(void);
 [[A16, XY16]] extern void finalize_metasprites(void);
 
+#endif
+
 void dma_oambuffer__vblank(void);
 
 void draw_metasprite_screen(uint8_t frameset, uint8_t frame, int16_t x, int16_t y);
 
-#endif
+void set_metasprite_camera(uint16_t x, uint16_t y);
+void draw_metasprite_camera(uint8_t frameset, uint8_t frame, int16_t x, int16_t y);
 
 #endif
