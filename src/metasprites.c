@@ -125,12 +125,15 @@ const volatile uint8_t FixedOffscreenByte = -16;
 void dma_oambuffer__vblank(void) {
     PPU_OAMADD = 0;
 
-    // Transfer `oamBuffer[..oamBufferPos]` to the OAM
     DMA_DMAP_BBAD_0 = DMAP_BBAD_(DMAP_TRANSFER_ONE, 0x2104); // OAMDATA
-    DMA_DAS0 = oamBufferPos;
-    DMA_A1T0 = (uint16_t)(NEAR_PTR void *)(&oamBuffer);
     DMA_A1B0 = 0x7e;
-    DMA_DMAEN = 1;
+
+    // Transfer `oamBuffer[..oamBufferPos]` to the OAM
+    if (oamBufferPos) {
+        DMA_DAS0 = oamBufferPos;
+        DMA_A1T0 = (uint16_t)(NEAR_PTR void *)(&oamBuffer);
+        DMA_DMAEN = 1;
+    }
 
     if (oamBufferPos < OAM_BUFFER_LO_SIZE) {
         // `oamBuffer` is not full.
